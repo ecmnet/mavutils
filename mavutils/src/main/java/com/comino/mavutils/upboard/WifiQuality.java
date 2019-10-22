@@ -7,7 +7,7 @@ import java.io.InputStreamReader;
 public class WifiQuality {
 
 	private long tms = 0;
-	private int  quality = 0;
+	private int  quality = -1;
 
 	public void getQuality() {
 		if(System.currentTimeMillis()-tms < 1000)
