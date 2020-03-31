@@ -1,15 +1,17 @@
-package com.comino.mavutils.upboard;
+package com.comino.mavutils.hw.upboard;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-public class CPUTemperature {
+import com.comino.mavutils.hw.ICPUTemperature;
+
+public class CPUTemperature implements ICPUTemperature  {
 
 	private long tms = 0;
 	private int  temperature = 0;
 
-	public void getTemperature() {
+	public void determine() {
 		if(System.currentTimeMillis()-tms < 10000)
 			return;
 		try {
@@ -23,8 +25,8 @@ public class CPUTemperature {
 		tms = System.currentTimeMillis();
 	}
 
-	public int get() {
-		return temperature;
+	public byte get() {
+		return (byte)temperature;
 	}
 
 }

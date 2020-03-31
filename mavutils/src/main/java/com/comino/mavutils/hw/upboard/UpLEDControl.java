@@ -1,4 +1,4 @@
-package com.comino.mavutils.upboard;
+package com.comino.mavutils.hw.upboard;
 
 import java.io.FileOutputStream;
 import java.io.PrintStream;
