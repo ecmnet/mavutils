@@ -6,11 +6,13 @@ import java.lang.management.OperatingSystemMXBean;
 import com.comino.mavutils.hw.jetson.CPUTemperature;
 import com.comino.mavutils.linux.LinuxUtils;
 
-public class HardwareControl {
+public class HardwareAbstraction {
 
 	public static final int UPBOARD = 0;
 	public static final int JETSON  = 1;
 	public static final int SITL    = 2;
+
+	private static HardwareAbstraction instance = null;
 
 	private OperatingSystemMXBean osBean = null;
 	private MemoryMXBean mxBean = null;
@@ -22,7 +24,13 @@ public class HardwareControl {
 	private int    archid;
 	private int    cpu;
 
-	public HardwareControl() {
+	public static HardwareAbstraction instance() {
+		if(instance==null)
+			instance = new HardwareAbstraction();
+		return instance;
+	}
+
+	private HardwareAbstraction() {
 
 		mxBean = java.lang.management.ManagementFactory.getMemoryMXBean();
 		osBean =  java.lang.management.ManagementFactory.getOperatingSystemMXBean();
@@ -43,6 +51,10 @@ public class HardwareControl {
 
 	}
 
+	public int getArchId() {
+		return archid;
+	}
+
 	public int getTemperature() {
       return temp.get();
 	}
@@ -51,7 +63,7 @@ public class HardwareControl {
 		return (byte)wifi.get();
 	}
 
-	public String getArchitecture() {
+	public String getArchName() {
 		return arch;
 	}
 
