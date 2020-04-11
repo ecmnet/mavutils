@@ -39,10 +39,12 @@ public class HardwareAbstraction {
 		if(arch.contains("aarch64")) {
 			archid = JETSON;
 			temp = new com.comino.mavutils.hw.jetson.CPUTemperature();
+			System.out.println("Jetson Nano architecture found..");
 		}
 		else {
 			archid = UPBOARD;
 			temp = new com.comino.mavutils.hw.upboard.CPUTemperature();
+			System.out.println("Intel UpBoard architecture found..");
 		}
 
 		mxBean = java.lang.management.ManagementFactory.getMemoryMXBean();
