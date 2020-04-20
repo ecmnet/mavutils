@@ -40,16 +40,23 @@ public class HardwareAbstraction {
 			archid = JETSON;
 			temp = new com.comino.mavutils.hw.jetson.CPUTemperature();
 			System.out.println("Jetson Nano architecture found..");
+			wifi = new WifiQuality("wlan0");
 		}
-		else {
+		else if (arch.contains("x86_64")){
+			archid = SITL;
+			temp = new com.comino.mavutils.hw.upboard.CPUTemperature();
+			System.out.println("Intel SITL architecture found..");
+			wifi = new WifiQuality("wlan0");
+		}
+		else if (arch.contains("amd64")){
 			archid = UPBOARD;
 			temp = new com.comino.mavutils.hw.upboard.CPUTemperature();
 			System.out.println("Intel UpBoard architecture found..");
+			wifi = new WifiQuality("wlx74da38805d92");
 		}
 
 		mxBean = java.lang.management.ManagementFactory.getMemoryMXBean();
 
-		wifi = new WifiQuality();
 
 	}
 
