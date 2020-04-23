@@ -830,6 +830,7 @@ public class ColorMap {
         c[i] = new Color(1.0f-0.5f*y,0.0f,0.0f,a);
       }
     }
+    c[0] = Color.BLACK;
     return c;
   }
 
