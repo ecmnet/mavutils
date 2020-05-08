@@ -56,7 +56,7 @@ public class ExecutorService {
 		low_pool.setRemoveOnCancelPolicy(true);
 		low_pool.prestartAllCoreThreads();
 
-		high_pool  = new ScheduledThreadPoolExecutor(10);
+		high_pool  = new ScheduledThreadPoolExecutor(5);
 		high_pool.setThreadFactory(new DaemonThreadFactory(Thread.NORM_PRIORITY+2,"HighPool"));
 		high_pool.allowCoreThreadTimeOut(false);
 		high_pool.setRemoveOnCancelPolicy(true);
