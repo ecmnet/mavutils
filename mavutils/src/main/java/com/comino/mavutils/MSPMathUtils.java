@@ -199,6 +199,14 @@ public class MSPMathUtils {
 		return normAngle(Math.abs(angle1 - angle2));
 	}
 
+	public static float expo(float x, float e) {
+          return (1 - e) * x + e * x * x * x;
+	}
+
+	public static float superexpo(float x, float e, float g) {
+        return expo(x, e) * (1 - g) / (1 - Math.abs(x) * g);
+	}
+
 	private static class Reference {
 		double lat_rad = 0;
 		double lon_rad = 0;
