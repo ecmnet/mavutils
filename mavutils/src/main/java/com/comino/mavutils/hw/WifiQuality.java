@@ -22,6 +22,10 @@ public class WifiQuality {
 	public void getQuality() {
 		if(System.currentTimeMillis()-tms < 2000)
 			return;
+		if( device == null) {
+			quality = 100;
+			return;
+		}
 		try {
 			String line = null;
 			Process process = Runtime.getRuntime().exec("iw dev "+device+" station dump");

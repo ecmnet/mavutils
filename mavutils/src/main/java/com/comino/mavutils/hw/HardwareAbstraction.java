@@ -46,7 +46,7 @@ public class HardwareAbstraction {
 			archid = SITL;
 			temp = new com.comino.mavutils.hw.upboard.CPUTemperature();
 			System.out.println("Intel SITL architecture found..");
-			wifi = new WifiQuality("wlan0");
+			wifi = new WifiQuality(null);
 		}
 		else if (arch.contains("amd64")){
 			archid = UPBOARD;
