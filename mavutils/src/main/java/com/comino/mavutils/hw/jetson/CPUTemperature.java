@@ -4,9 +4,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import com.comino.mavutils.hw.ICPUTemperature;
+import com.comino.mavutils.hw.IMeasurement;
 
-public class CPUTemperature implements ICPUTemperature {
+public class CPUTemperature implements IMeasurement {
 
 	private long tms = 0;
 	private int  temperature = 0;
@@ -26,8 +26,8 @@ public class CPUTemperature implements ICPUTemperature {
 		tms = System.currentTimeMillis();
 	}
 
-	public byte get() {
-		return (byte)temperature;
+	public float get() {
+		return (float)temperature;
 	}
 
 }

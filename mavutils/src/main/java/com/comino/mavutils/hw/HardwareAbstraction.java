@@ -4,6 +4,7 @@ import java.lang.management.MemoryMXBean;
 import java.lang.management.OperatingSystemMXBean;
 
 import com.comino.mavutils.hw.jetson.CPUTemperature;
+import com.comino.mavutils.hw.upboard.BatteryTemperature;
 import com.comino.mavutils.linux.LinuxUtils;
 
 public class HardwareAbstraction {
@@ -17,7 +18,8 @@ public class HardwareAbstraction {
 	private OperatingSystemMXBean osBean = null;
 	private MemoryMXBean mxBean = null;
 
-	private ICPUTemperature temp;
+	private IMeasurement cpu_temp;
+	private IMeasurement battery_temp;
 	private WifiQuality     wifi;
 
 	private String arch;
@@ -38,19 +40,22 @@ public class HardwareAbstraction {
 
 		if(arch.contains("aarch64")) {
 			archid = JETSON;
-			temp = new com.comino.mavutils.hw.jetson.CPUTemperature();
+			cpu_temp = new com.comino.mavutils.hw.jetson.CPUTemperature();
+			battery_temp = new com.comino.mavutils.hw.sitl.BatteryTemperature();
 			System.out.println("Jetson Nano architecture found..");
 			wifi = new WifiQuality("wlan0");
 		}
 		else if (arch.contains("x86_64")){
 			archid = SITL;
-			temp = new com.comino.mavutils.hw.upboard.CPUTemperature();
+			cpu_temp = new com.comino.mavutils.hw.upboard.CPUTemperature();
+			battery_temp = new com.comino.mavutils.hw.sitl.BatteryTemperature();
 			System.out.println("Intel SITL architecture found..");
 			wifi = new WifiQuality(null);
 		}
 		else if (arch.contains("amd64")){
 			archid = UPBOARD;
-			temp = new com.comino.mavutils.hw.upboard.CPUTemperature();
+			cpu_temp = new com.comino.mavutils.hw.upboard.CPUTemperature();
+			battery_temp = new com.comino.mavutils.hw.upboard.BatteryTemperature();
 			System.out.println("Intel UpBoard architecture found..");
 			wifi = new WifiQuality("wlx74da38805d92");
 		}
@@ -64,9 +69,13 @@ public class HardwareAbstraction {
 		return archid;
 	}
 
-	public int getTemperature() {
-      return temp.get();
+	public float getCPUTemperature() {
+      return cpu_temp.get();
 	}
+	
+	public float getBatteryTemperature() {
+	      return battery_temp.get();
+		}
 
 	public byte getWifiQuality() {
 		return (byte)wifi.get();
@@ -86,7 +95,8 @@ public class HardwareAbstraction {
 
 	public void update() {
 
-		temp.determine();
+		cpu_temp.determine();
+		battery_temp.determine();
 		wifi.getQuality();
 
 		try {
