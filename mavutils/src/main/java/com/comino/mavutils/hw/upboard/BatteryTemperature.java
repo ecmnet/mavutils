@@ -18,7 +18,7 @@ public class BatteryTemperature implements IMeasurement  {
 	public BatteryTemperature() {
 		try {
 			buffer = new I2CBuffer(2);
-			bus = new I2CBus( 1 ) ;
+			bus = new I2CBus( 5 ) ;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -35,9 +35,9 @@ public class BatteryTemperature implements IMeasurement  {
 		bus.selectSlave( ADDRESS ) ;
 		bus.smbus.writeByteDirectly( 0 ) ;
 		bus.read(buffer, 2);
-		temp = ( buffer.get(0) << 8 | buffer.get(1) ) / 256.0f;
-		
-		} catch (IOException e) { }
+		temp = ( buffer.get(0) << 8 | buffer.get(1) ) / 256.0f - 0.5f;
+	
+		} catch (IOException e) { temp = 0; }
 		
 	}
 

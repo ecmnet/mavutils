@@ -1,8 +1,8 @@
 package com.comino.mavutils.hw;
 
-public interface ICPUTemperature {
+public interface IMeasurement {
 
 	public void determine();
-	public byte get();
+	public float get();
 
 }
