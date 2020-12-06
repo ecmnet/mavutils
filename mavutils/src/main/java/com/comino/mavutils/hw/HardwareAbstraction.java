@@ -58,6 +58,7 @@ public class HardwareAbstraction {
 			battery_temp = new com.comino.mavutils.hw.upboard.BatteryTemperature();
 			System.out.println("Intel UpBoard architecture found..");
 			wifi = new WifiQuality("wlx74da38805d92");
+		//	wifi = new WifiQuality();
 		}
 
 		mxBean = java.lang.management.ManagementFactory.getMemoryMXBean();

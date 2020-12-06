@@ -3,6 +3,9 @@ package com.comino.mavutils.hw;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.concurrent.TimeUnit;
+
+import com.comino.mavutils.legacy.ExecutorService;
 
 public class WifiQuality {
 
@@ -15,8 +18,7 @@ public class WifiQuality {
 	}
 
 	public WifiQuality() {
-		//TODO: Autodetect WLAN IF
-		this.device = "wlan0";
+		device = getDevice();	
 	}
 
 	public void getQuality() {
@@ -26,6 +28,7 @@ public class WifiQuality {
 			quality = 100;
 			return;
 		}
+		
 		try {
 			String line = null;
 			Process process = Runtime.getRuntime().exec("iw dev "+device+" station dump");
@@ -33,7 +36,7 @@ public class WifiQuality {
 			while((line=reader.readLine())!=null) {
 				if(line.contains("signal:")) {
 					quality = Math.min(Math.max(2 * (Integer.parseInt(line.substring(9, 14).trim()) + 80), 0), 100);
-				   //System.out.println(Integer.parseInt(line.substring(9, 14).trim())+":"+quality);
+					//System.out.println(Integer.parseInt(line.substring(9, 14).trim())+":"+quality);
 				}
 			}
 			reader.close();
@@ -43,6 +46,27 @@ public class WifiQuality {
 
 	public int get() {
 		return quality;
+	}
+	
+	private String getDevice() {
+		try {
+			
+			String line = null;
+			Process process = Runtime.getRuntime().exec("iw dev | awk '$1==\"Interface\"{print $2}'");
+			process.waitFor(1000,TimeUnit.MILLISECONDS);
+			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+			while((line=reader.readLine())!=null) {
+				System.out.println("WLAN device "+line+" found");
+				reader.close();
+				return line;
+			}
+			reader.close();
+
+		} catch (IOException | InterruptedException e) {
+			
+		}
+		System.out.println("No Wifi quality info available");
+		return null;
 	}
 
 }

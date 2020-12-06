@@ -181,11 +181,13 @@ public class MSPMathUtils {
 		if(!Float.isNaN(min) && value < min) return min;
 		return value;
 	}
+	
+	public static double normAngle(double a, double center) {
+            return a - PI2 * Math.floor((a + Math.PI - center) / PI2);
+     }
 
 	public static float normAngle(float angle) {
-		if(angle >  (float)PI2) return angle - PI2;
-		if(angle < -(float)PI2) return angle + PI2;
-		return angle;
+         return (float)normAngle(angle,0);
 	}
 
 	public static float normAngle2(float angle) {
