@@ -165,6 +165,12 @@ public class MSPMathUtils {
 		return deg;
 
 	}
+	
+	public static float fromRad2(double radians) {
+		float deg = (float)(radians * fromRad ) % 360;
+		return deg;
+
+	}
 
 	public static float toRad(double angle) {
 		return (float)(angle * toRad);
@@ -218,6 +224,13 @@ public class MSPMathUtils {
 		boolean init  = false;
 
 
+	}
+	
+	public static void main(String[] args)  {
+		float a = toRad(-360);
+		float b = toRad( 359);
+	
+		System.out.println(fromRad2(normAngle(b-a)));
 	}
 }
 
