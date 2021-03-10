@@ -1,15 +1,18 @@
 package com.comino.mavutils.workqueue;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 
 import com.comino.mavutils.legacy.ExecutorService.DaemonThreadFactory;
 
 public class WorkQueue { 
 
 	private static WorkQueue instance;
+	private final long ns_ms = 1000000L;
 
 	private final HashMap<String,Worker> queues = new HashMap<String,Worker>();
 
@@ -27,12 +30,12 @@ public class WorkQueue {
 
 	}
 
-	public void addToQueue(String queue, String name, int cycle_ms, Runnable runnable) {
-		queues.get(queue).add(new WorkItem(name, runnable, cycle_ms));
+	public void addCyclicTask(String queue, int cycle_ms, Runnable runnable) {
+		queues.get(queue).add(new WorkItem(runnable.getClass().getCanonicalName(),runnable , cycle_ms, false));
 	}
-	
-	public void addToQueue(String queue, int cycle_ms, Runnable runnable) {
-		queues.get(queue).add(new WorkItem(runnable.getClass().getCanonicalName(),runnable , cycle_ms));
+
+	public void addSingleTask(String queue, int delay_ms, Runnable runnable) {
+		queues.get(queue).add(new WorkItem(runnable.getClass().getCanonicalName(),runnable ,delay_ms, true));
 	}
 
 	public void start() {
@@ -49,8 +52,10 @@ public class WorkQueue {
 
 	public void printStatus() {
 		queues.forEach((i,w) -> {
-			System.out.println("Queue "+i+":");
-			w.print(); 
+			if(!w.queue.isEmpty()) {
+				System.out.println("Queue "+i+":");
+				w.print(); 
+			}
 		});
 	}
 
@@ -58,11 +63,12 @@ public class WorkQueue {
 
 		private final HashMap<Integer, WorkItem> queue = new HashMap<Integer, WorkItem>();
 		private final ScheduledThreadPoolExecutor pool = new ScheduledThreadPoolExecutor(1);
+		private final ArrayList<Integer>   remove_list = new ArrayList<Integer>(10);
 
 		private String     name         = null;
-		private long       min_cycle_ns = Long.MAX_VALUE;
+		private long       min_cycle_ns = 1000000000;
 		private long       tms          = 0;
-		private Future<?>  future       = null;
+		private boolean    isRunning    = false;
 
 		public Worker(String name, int priority) {
 			this.name = name;
@@ -74,23 +80,26 @@ public class WorkQueue {
 		}
 
 		public void add(WorkItem item) {
-			if(min_cycle_ns  > item.getCycleTime())
-				min_cycle_ns = item.getCycleTime();
-			queue.put(queue.size(),item);
+			if(min_cycle_ns  > item.cycle_ns && item.cycle_ns > 0) {
+				min_cycle_ns = item.cycle_ns;
+			}
+			queue.put(queue.size(),item);		
 		}
 
 		public void start() {
-			if(queue.isEmpty()) {
-				System.out.println("Worker not started: Queue is empty");
+
+			if(isRunning)
 				return;
-			}
-			System.out.println("Worker started with cycle: "+min_cycle_ns/1000000);
-			future = pool.submit(this);
+
+			isRunning = true;
+			System.out.println("WorkQueue "+name+" started ("+min_cycle_ns/ns_ms+"ms)");
+			pool.submit(this);
 		}
 
 		public void stop() {
-			if(future!=null)
-				future.cancel(false);
+			isRunning = false;
+			queue.clear();
+			pool.shutdown();
 		}
 
 		public void print() {
@@ -101,14 +110,20 @@ public class WorkQueue {
 
 		@Override
 		public void run() {
-			tms = System.nanoTime();
-			future = pool.schedule(this, min_cycle_ns, TimeUnit.NANOSECONDS);
-			queue.forEach((i,w) -> {
-				w.run();
-			});
+			while(isRunning) {
+				tms = System.nanoTime();
+			//	pool.schedule(this, min_cycle_ns, TimeUnit.NANOSECONDS);
 
-			if((System.nanoTime()  - tms) > min_cycle_ns)
-				System.err.println(" Runtime of queue "+name+" exceeds cycle time: "+(System.nanoTime()  - tms)/1000000+"ms");
+				remove_list.clear();
+				queue.forEach((i,w) -> { w.run(); });
+				queue.forEach((i,w) -> { if(w.once && w.count > 0) remove_list.add(i); });
+				remove_list.forEach((i) -> queue.remove(i));
+
+				if((System.nanoTime()  - tms) > min_cycle_ns)
+					System.err.println(" Runtime of queue "+name+" exceeds cycle time: "+(System.nanoTime()  - tms)/ns_ms+"ms");
+				LockSupport.parkNanos(min_cycle_ns/10);
+
+			}
 		}
 	}
 
@@ -121,24 +136,26 @@ public class WorkQueue {
 		private long           act_exec;
 		private long          act_cycle;
 		private long              count;
+		private boolean            once;
 
-		public WorkItem(String name, Runnable runnable, int cycle_ms) {
+		public WorkItem(String name, Runnable runnable, int cycle_ms, boolean once) {
 			this.name           = name;
 			this.runnable       = runnable;
-			this.cycle_ns       = cycle_ms * 1000000;
-			this.last_exec      = 0;
+			this.cycle_ns       = (long)cycle_ms * ns_ms;
 			this.act_cycle      = 0;
 			this.count          = 0;
-		}
+			this.once           = once;
 
-		public long getCycleTime() {
-			return cycle_ns;
+			if(once)
+				this.last_exec      = System.nanoTime() ;
+			else
+				this.last_exec      = 0;
 		}
 
 		public String toString() {
 			if(act_cycle>0)
-			  return name+":\t"+(1000/act_cycle)+"Hz\t"+act_exec +"ms";
-			return name;
+				return String.format("%3.1f",1000f/act_cycle)+"Hz\t"+act_exec +"ms\t"+name;
+			return "\t\t"+act_exec +"ms\t"+name;
 		}
 
 
@@ -146,29 +163,35 @@ public class WorkQueue {
 			if((System.nanoTime() - last_exec) >= cycle_ns) {
 				count++;
 				if(last_exec > 0)
-				  act_cycle = (act_cycle * (count - 1  ) + ( System.nanoTime() - last_exec) / 1000000 ) / ( count ) ;
+					act_cycle =  ( System.nanoTime() - last_exec) / ns_ms  ;
 				last_exec = System.nanoTime();
 				runnable.run();
-				act_exec  = (act_exec  * (count - 1  ) + ( System.nanoTime() - last_exec) / 1000000 ) / ( count ) ;
+				act_exec  = (act_exec  * (count - 1  ) + ( System.nanoTime() - last_exec) / ns_ms ) / ( count ) ;
 			}
 		}
 	}
+
+
+
 
 	public static void main(String[] args) {
 
 		WorkQueue q = WorkQueue.getInstance();
 
-		q.addToQueue("LP", 50, ()   ->  { try { Thread.sleep(10); } catch (InterruptedException e) {} });
-		q.addToQueue("LP", 50, ()   ->  { try { Thread.sleep(2); }  catch (InterruptedException e) {} });
-		q.addToQueue("LP", 100, ()  ->  { try { Thread.sleep(20); } catch (InterruptedException e) {} });
-		q.addToQueue("NP", 200, ()  ->  { try { Thread.sleep(2);  } catch (InterruptedException e) {} });
-		q.addToQueue("HP", 10, ()   ->  { try { Thread.sleep(5);  } catch (InterruptedException e) {} });
-		q.addToQueue("HP", 30, ()   ->  { try { Thread.sleep(2);  } catch (InterruptedException e) {} });
+		final long tms = System.currentTimeMillis();
+
+		q.addCyclicTask("LP", 50,  () ->  { try { Thread.sleep(10); } catch (InterruptedException e) {} });
+		q.addCyclicTask("LP", 50,  () ->  { try { Thread.sleep(2);  } catch (InterruptedException e) {} });
+		q.addCyclicTask("LP", 100, () ->  { try { Thread.sleep(20); } catch (InterruptedException e) {} });
+		q.addCyclicTask("NP", 200, () ->  { try { Thread.sleep(2);  } catch (InterruptedException e) {} });
+		q.addCyclicTask("HP", 500, () ->  { try { Thread.sleep(5);  } catch (InterruptedException e) {} });
+		q.addSingleTask("LP", 7000, () ->  { try { System.out.println("===> "+(System.currentTimeMillis()-tms)) ; } catch (Exception e) {} });
+		q.addCyclicTask("HP", 10,  () ->  { try { Thread.sleep(2);  } catch (InterruptedException e) {} });
 
 		q.start();
 
-		int count = 1000;
-		while(count-- > 0) {
+		int count = 0;
+		while(count++ < 20) {
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) { }

@@ -7,7 +7,7 @@ import com.comino.mavutils.hw.jetson.CPUTemperature;
 import com.comino.mavutils.hw.upboard.BatteryTemperature;
 import com.comino.mavutils.linux.LinuxUtils;
 
-public class HardwareAbstraction {
+public class HardwareAbstraction implements Runnable {
 
 	public static final int UPBOARD = 0;
 	public static final int JETSON  = 1;
@@ -94,14 +94,19 @@ public class HardwareAbstraction {
      return cpu;
 	}
 
-	public void update() {
+	public void run() {
+		
+		int cpu_l;
 
 		cpu_temp.determine();
-		battery_temp.determine();
 		wifi.getQuality();
+		
+		if(archid == UPBOARD)
+			battery_temp.determine();
 
 		try {
-			cpu = LinuxUtils.getProcessCpuLoad();
+			cpu_l = LinuxUtils.getProcessCpuLoad();
+			if(cpu_l > 0) cpu = cpu_l;
 		} catch (Exception e) {	}
 	}
 

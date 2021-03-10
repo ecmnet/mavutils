@@ -26,6 +26,6 @@ public class UpLEDControl {
 	}
 
 	public static void clear() {
-		setLED("green", false); 	setLED("red", false); setLED("yellow", false);
+		setLED("green", false);  setLED("red", false); setLED("yellow", false);
 	}
 }
