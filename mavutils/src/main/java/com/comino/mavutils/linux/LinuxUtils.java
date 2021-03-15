@@ -9,12 +9,14 @@ import javax.management.ObjectName;
 
 public class LinuxUtils {
 
-	final static MBeanServer mbs    = ManagementFactory.getPlatformMBeanServer();
+	private  final static MBeanServer mbs    = ManagementFactory.getPlatformMBeanServer();
+	private  static ObjectName name ;
 
 	public static int getProcessCpuLoad() throws Exception {
 
-		ObjectName name    = ObjectName.getInstance("java.lang:type=OperatingSystem");
-
+		if(name==null)
+		     name    = ObjectName.getInstance("java.lang:type=OperatingSystem");
+		
 	    AttributeList list = mbs.getAttributes(name, new String[]{ "SystemCpuLoad" });
 
 	    if (list.isEmpty())  return 0;

@@ -25,6 +25,7 @@ public class HardwareAbstraction implements Runnable {
 	private String arch;
 	private int    archid;
 	private int    cpu;
+	private int    memory=0;
 
 	public static HardwareAbstraction instance() {
 		if(instance==null)
@@ -87,7 +88,7 @@ public class HardwareAbstraction implements Runnable {
 	}
 
 	public int getMemoryUsage() {
-		return (int)(mxBean.getHeapMemoryUsage().getUsed() * 100 /mxBean.getHeapMemoryUsage().getMax());
+		return memory;
 	}
 
 	public int getCPULoad() {
@@ -97,6 +98,8 @@ public class HardwareAbstraction implements Runnable {
 	public void run() {
 		
 		int cpu_l;
+		
+		memory = (int)(mxBean.getHeapMemoryUsage().getUsed() * 100 /mxBean.getHeapMemoryUsage().getMax());
 
 		cpu_temp.determine();
 		wifi.getQuality();
