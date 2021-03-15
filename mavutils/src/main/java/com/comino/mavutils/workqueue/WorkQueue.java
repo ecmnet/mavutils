@@ -2,6 +2,7 @@ package com.comino.mavutils.workqueue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -53,7 +54,7 @@ public class WorkQueue {
 	public void printStatus() {
 		queues.forEach((i,w) -> {
 			if(!w.queue.isEmpty()) {
-				System.out.println("Queue "+i+":");
+				System.out.println("Queue "+i+" (Overruns: "+w.getExceeded()+"):");
 				w.print(); 
 			}
 		});
@@ -68,6 +69,7 @@ public class WorkQueue {
 		private String     name         = null;
 		private long       min_cycle_ns = 1000000000;
 		private long       tms          = 0;
+		private int        exceeded     = 0;
 		private boolean    isRunning    = false;
 
 		public Worker(String name, int priority) {
@@ -84,6 +86,10 @@ public class WorkQueue {
 				min_cycle_ns = item.cycle_ns;
 			}
 			queue.put(queue.size(),item);		
+		}
+		
+		public int getExceeded() {
+			return exceeded;
 		}
 
 		public void start() {
@@ -110,17 +116,30 @@ public class WorkQueue {
 
 		@Override
 		public void run() {
+			WorkItem w; Integer ix; long exec_cycle;
 			while(isRunning) {
+				
 				tms = System.nanoTime();
-			//	pool.schedule(this, min_cycle_ns, TimeUnit.NANOSECONDS);
-
+				
 				remove_list.clear();
-				queue.forEach((i,w) -> { w.run(); });
-				queue.forEach((i,w) -> { if(w.once && w.count > 0) remove_list.add(i); });
-				remove_list.forEach((i) -> queue.remove(i));
-
-				if((System.nanoTime()  - tms) > min_cycle_ns)
-					System.err.println(" Runtime of queue "+name+" exceeds cycle time: "+(System.nanoTime()  - tms)/ns_ms+"ms");
+				
+				Iterator<Integer> i = queue.keySet().iterator();
+			    while(i.hasNext()) {
+			    	ix = i.next();
+					w = queue.get(ix);
+					w.run();
+					if(w.once && w.count > 0) 
+						remove_list.add(ix);
+				}
+			    
+			    if(!remove_list.isEmpty())
+			      queue.keySet().removeAll(remove_list);
+			   
+			    exec_cycle = System.nanoTime()  - tms;
+			    
+				if(exec_cycle > min_cycle_ns) 
+					exceeded++;
+				
 				LockSupport.parkNanos(min_cycle_ns/10);
 
 			}
@@ -154,8 +173,8 @@ public class WorkQueue {
 
 		public String toString() {
 			if(act_cycle>0)
-				return String.format("%3.1f",1000f/act_cycle)+"Hz\t"+act_exec +"ms\t"+name;
-			return "\t\t"+act_exec +"ms\t"+name;
+				return String.format("%3.1f",1000f/act_cycle)+"Hz\t"+act_exec +"us\t"+name;
+			return "\t\t"+act_exec +"us\t"+name;
 		}
 
 
@@ -166,7 +185,8 @@ public class WorkQueue {
 					act_cycle =  ( System.nanoTime() - last_exec) / ns_ms  ;
 				last_exec = System.nanoTime();
 				runnable.run();
-				act_exec  = (act_exec  * (count - 1  ) + ( System.nanoTime() - last_exec) / ns_ms ) / ( count ) ;
+		//		act_exec  = (act_exec  * (count - 1  ) + ( System.nanoTime() - last_exec) / ns_ms ) / ( count ) ;
+				act_exec  = ( System.nanoTime() - last_exec) /1000 ;
 			}
 		}
 	}
@@ -191,7 +211,7 @@ public class WorkQueue {
 		q.start();
 
 		int count = 0;
-		while(count++ < 20) {
+		while(count++ < 30) {
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) { }
