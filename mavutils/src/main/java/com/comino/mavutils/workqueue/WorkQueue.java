@@ -3,6 +3,8 @@ package com.comino.mavutils.workqueue;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -15,7 +17,7 @@ public class WorkQueue {
 	private static WorkQueue instance;
 	private final long ns_ms = 1000000L;
 
-	private final HashMap<String,Worker> queues = new HashMap<String,Worker>();
+	private final Map<String,Worker> queues = new ConcurrentHashMap<String,Worker>();
 
 	public static WorkQueue getInstance() {
 		if(instance == null)
@@ -31,12 +33,16 @@ public class WorkQueue {
 
 	}
 
-	public void addCyclicTask(String queue, int cycle_ms, Runnable runnable) {
-		queues.get(queue).add(new WorkItem(runnable.getClass().getCanonicalName(),runnable , cycle_ms, false));
+	public int addCyclicTask(String queue, int cycle_ms, Runnable runnable) {
+		return queues.get(queue).add(new WorkItem(runnable.getClass().getCanonicalName(),runnable , cycle_ms, false));
 	}
 
-	public void addSingleTask(String queue, int delay_ms, Runnable runnable) {
-		queues.get(queue).add(new WorkItem(runnable.getClass().getCanonicalName(),runnable ,delay_ms, true));
+	public int addSingleTask(String queue, int delay_ms, Runnable runnable) {
+		return queues.get(queue).add(new WorkItem(runnable.getClass().getCanonicalName(),runnable ,delay_ms, true));
+	}
+
+	public void removeTask(String queue, int id) {
+		//queues.get(queue).remove(id);
 	}
 
 	public void start() {
@@ -60,11 +66,10 @@ public class WorkQueue {
 		});
 	}
 
-	class Worker implements Runnable {
+	private class Worker implements Runnable {
 
-		private final HashMap<Integer, WorkItem> queue = new HashMap<Integer, WorkItem>();
+		private final Map<Integer, WorkItem>     queue = new ConcurrentHashMap<Integer, WorkItem>();
 		private final ScheduledThreadPoolExecutor pool = new ScheduledThreadPoolExecutor(1);
-		private final ArrayList<Integer>   remove_list = new ArrayList<Integer>(10);
 
 		private String     name         = null;
 		private long       min_cycle_ns = 1000000000;
@@ -81,13 +86,15 @@ public class WorkQueue {
 
 		}
 
-		public void add(WorkItem item) {
-			if(min_cycle_ns  > item.cycle_ns && item.cycle_ns > 0) {
+		public int add(WorkItem item) {
+			int id = item.hashCode();
+			if(!item.once && min_cycle_ns  > item.cycle_ns && item.cycle_ns > 0) {
 				min_cycle_ns = item.cycle_ns;
 			}
-			queue.put(queue.size(),item);		
+			queue.put(id,item);	
+			return id;
 		}
-		
+
 		public int getExceeded() {
 			return exceeded;
 		}
@@ -110,43 +117,35 @@ public class WorkQueue {
 
 		public void print() {
 			queue.forEach((i,w) -> {
-				System.out.println(" -> "+i+": "+w);
+				System.out.println(" ->  "+w);
 			});
 		}
 
 		@Override
 		public void run() {
-			WorkItem w; Integer ix; long exec_cycle;
+			long exec_cycle;
 			while(isRunning) {
-				
+
 				tms = System.nanoTime();
-				
-				remove_list.clear();
-				
-				Iterator<Integer> i = queue.keySet().iterator();
-			    while(i.hasNext()) {
-			    	ix = i.next();
-					w = queue.get(ix);
-					w.run();
-					if(w.once && w.count > 0) 
-						remove_list.add(ix);
-				}
-			    
-			    if(!remove_list.isEmpty())
-			      queue.keySet().removeAll(remove_list);
-			   
-			    exec_cycle = System.nanoTime()  - tms;
-			    
+				queue.forEach((i,k) -> {
+					k.run();
+					if(k.once && k.count > 0) 
+						queue.remove(i);
+				});
+
+				exec_cycle = System.nanoTime()  - tms;
+
 				if(exec_cycle > min_cycle_ns) 
 					exceeded++;
-				
+
 				LockSupport.parkNanos(min_cycle_ns/10);
 
 			}
+
 		}
 	}
 
-	class WorkItem {
+	private class WorkItem {
 
 		private String             name;
 		private Runnable       runnable;
@@ -154,7 +153,7 @@ public class WorkQueue {
 		private long          last_exec;
 		private long           act_exec;
 		private long          act_cycle;
-		private long              count;
+		private int               count;
 		private boolean            once;
 
 		public WorkItem(String name, Runnable runnable, int cycle_ms, boolean once) {
@@ -166,32 +165,32 @@ public class WorkQueue {
 			this.once           = once;
 
 			if(once)
-				this.last_exec      = System.nanoTime() ;
+				this.last_exec      = System.nanoTime();
 			else
 				this.last_exec      = 0;
 		}
 
 		public String toString() {
+			if(once)
+				return (cycle_ns/ns_ms)+"ms\t"+act_exec +"us\t"+name;
 			if(act_cycle>0)
 				return String.format("%3.1f",1000f/act_cycle)+"Hz\t"+act_exec +"us\t"+name;
-			return "\t\t"+act_exec +"us\t"+name;
+			return "\t"+name;
 		}
-
 
 		public void run() {
-			if((System.nanoTime() - last_exec) >= cycle_ns) {
-				count++;
-				if(last_exec > 0)
-					act_cycle =  ( System.nanoTime() - last_exec) / ns_ms  ;
-				last_exec = System.nanoTime();
-				runnable.run();
-		//		act_exec  = (act_exec  * (count - 1  ) + ( System.nanoTime() - last_exec) / ns_ms ) / ( count ) ;
-				act_exec  = ( System.nanoTime() - last_exec) /1000 ;
-			}
+			try { 
+				if((System.nanoTime() - last_exec) >= cycle_ns) {
+					count++;
+					if(last_exec > 0)
+						act_cycle =  ( System.nanoTime() - last_exec) / ns_ms  ;
+					last_exec = System.nanoTime();
+					runnable.run();
+					act_exec  = ( System.nanoTime() - last_exec) / 1000 ;
+				}
+			} catch( Exception e ) {e.printStackTrace(); }
 		}
 	}
-
-
 
 
 	public static void main(String[] args) {
@@ -205,7 +204,12 @@ public class WorkQueue {
 		q.addCyclicTask("LP", 100, () ->  { try { Thread.sleep(20); } catch (InterruptedException e) {} });
 		q.addCyclicTask("NP", 200, () ->  { try { Thread.sleep(2);  } catch (InterruptedException e) {} });
 		q.addCyclicTask("HP", 500, () ->  { try { Thread.sleep(5);  } catch (InterruptedException e) {} });
-		q.addSingleTask("LP", 7000, () ->  { try { System.out.println("===> "+(System.currentTimeMillis()-tms)) ; } catch (Exception e) {} });
+		q.addSingleTask("LP", 1000, () -> {  System.out.println("1: "+(System.currentTimeMillis()-tms)); });
+		q.addSingleTask("LP", 3000, () -> { 
+			try { System.out.println("2: "+(System.currentTimeMillis()-tms)) ;
+			q.addSingleTask("LP", 4000, () -> {  System.out.println("3: "+(System.currentTimeMillis()-tms)); });
+			} catch( Exception e ) {e.printStackTrace(); }
+		});
 		q.addCyclicTask("HP", 10,  () ->  { try { Thread.sleep(2);  } catch (InterruptedException e) {} });
 
 		q.start();
@@ -213,13 +217,14 @@ public class WorkQueue {
 		int count = 0;
 		while(count++ < 30) {
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(2000);
 			} catch (InterruptedException e) { }
 
 			q.printStatus();
 		}
 
 		q.stop();
+
 
 	}
 
