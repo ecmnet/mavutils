@@ -40,9 +40,14 @@ public class WorkQueue {
 	public int addSingleTask(String queue, int delay_ms, Runnable runnable) {
 		return queues.get(queue).add(new WorkItem(runnable.getClass().getCanonicalName(),runnable ,delay_ms, true));
 	}
+	
+	public int addSingleTask(String queue, Runnable runnable) {
+		return queues.get(queue).add(new WorkItem(runnable.getClass().getCanonicalName(),runnable ,0, true));
+	}
 
 	public void removeTask(String queue, int id) {
-		//queues.get(queue).remove(id);
+		if(id > 0)
+		  queues.get(queue).remove(id);
 	}
 
 	public void start() {
@@ -60,7 +65,7 @@ public class WorkQueue {
 	public void printStatus() {
 		queues.forEach((i,w) -> {
 			if(!w.queue.isEmpty()) {
-				System.out.println("Queue "+i+" (Overruns: "+w.getExceeded()+"):");
+				System.out.println("Queue "+i+" (Overruns: "+w.getExceeded()+", Cycle: "+w.min_cycle_ns/ns_ms+"ms):");
 				w.print(); 
 			}
 		});
@@ -93,6 +98,16 @@ public class WorkQueue {
 			}
 			queue.put(id,item);	
 			return id;
+		}
+		
+		public void remove(int id) {
+			queue.remove(id);
+			
+		    min_cycle_ns = Long.MAX_VALUE;
+		    queue.forEach((i,w) -> {
+		    	if(w.cycle_ns < min_cycle_ns)
+		    		min_cycle_ns = w.cycle_ns;
+		    });	
 		}
 
 		public int getExceeded() {
