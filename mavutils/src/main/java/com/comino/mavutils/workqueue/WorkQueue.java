@@ -49,6 +49,12 @@ public class WorkQueue {
 		if(id > 0)
 		  queues.get(queue).remove(id);
 	}
+	
+	public boolean isInQueue(String queue, int id) {
+		if(id > 0)
+		return queues.get(queue).isInQueue(id);
+		return false;
+	}
 
 	public void start() {
 		queues.forEach((i,w) -> {
@@ -101,13 +107,21 @@ public class WorkQueue {
 		}
 		
 		public void remove(int id) {
-			queue.remove(id);
+			
+			if(queue.remove(id) == null)
+				return;
+			
+			System.err.println(id+" removed");
 			
 		    min_cycle_ns = Long.MAX_VALUE;
 		    queue.forEach((i,w) -> {
 		    	if(w.cycle_ns < min_cycle_ns)
 		    		min_cycle_ns = w.cycle_ns;
 		    });	
+		}
+		
+		public boolean isInQueue(int id) {
+			return queue.containsKey(id);
 		}
 
 		public int getExceeded() {
@@ -178,11 +192,7 @@ public class WorkQueue {
 			this.act_cycle      = 0;
 			this.count          = 0;
 			this.once           = once;
-
-			if(once)
-				this.last_exec      = System.nanoTime();
-			else
-				this.last_exec      = 0;
+			this.last_exec      = System.nanoTime();
 		}
 
 		public String toString() {
@@ -214,15 +224,14 @@ public class WorkQueue {
 
 		final long tms = System.currentTimeMillis();
 
-		q.addCyclicTask("LP", 50,  () ->  { try { Thread.sleep(10); } catch (InterruptedException e) {} });
-		q.addCyclicTask("LP", 50,  () ->  { try { Thread.sleep(2);  } catch (InterruptedException e) {} });
+		int id = q.addCyclicTask("LP", 50,  () ->  { try { Thread.sleep(10); } catch (InterruptedException e) {} });
+//		q.addCyclicTask("LP", 50,  () ->  { try { Thread.sleep(2);  } catch (InterruptedException e) {} });
 		q.addCyclicTask("LP", 100, () ->  { try { Thread.sleep(20); } catch (InterruptedException e) {} });
-		q.addCyclicTask("NP", 200, () ->  { try { Thread.sleep(2);  } catch (InterruptedException e) {} });
-		q.addCyclicTask("HP", 500, () ->  { try { Thread.sleep(5);  } catch (InterruptedException e) {} });
-		q.addSingleTask("LP", 1000, () -> {  System.out.println("1: "+(System.currentTimeMillis()-tms)); });
+//		q.addCyclicTask("NP", 200, () ->  { try { Thread.sleep(2);  } catch (InterruptedException e) {} });
+//		q.addCyclicTask("HP", 500, () ->  { try { Thread.sleep(5);  } catch (InterruptedException e) {} });
+//		q.addSingleTask("LP", 1000, () -> {  System.out.println("1: "+(System.currentTimeMillis()-tms)); });
 		q.addSingleTask("LP", 3000, () -> { 
-			try { System.out.println("2: "+(System.currentTimeMillis()-tms)) ;
-			q.addSingleTask("LP", 4000, () -> {  System.out.println("3: "+(System.currentTimeMillis()-tms)); });
+			try { System.out.println("Remove: "+id); q.removeTask("LP",id);
 			} catch( Exception e ) {e.printStackTrace(); }
 		});
 		q.addCyclicTask("HP", 10,  () ->  { try { Thread.sleep(2);  } catch (InterruptedException e) {} });
@@ -232,10 +241,11 @@ public class WorkQueue {
 		int count = 0;
 		while(count++ < 30) {
 			try {
-				Thread.sleep(2000);
+				Thread.sleep(1000);
 			} catch (InterruptedException e) { }
 
 			q.printStatus();
+			System.out.println();
 		}
 
 		q.stop();
