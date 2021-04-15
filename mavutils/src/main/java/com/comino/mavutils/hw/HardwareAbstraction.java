@@ -109,7 +109,7 @@ public class HardwareAbstraction implements Runnable {
 
 		try {
 			cpu_l = LinuxUtils.getProcessCpuLoad();
-			if(cpu_l > 0) cpu = cpu_l;
+			if(cpu_l > 0) cpu = (int)(cpu*0.7f + cpu_l*0.3f);
 		} catch (Exception e) {	}
 	}
 
