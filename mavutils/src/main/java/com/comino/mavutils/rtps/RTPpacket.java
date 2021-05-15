@@ -1,5 +1,7 @@
 package com.comino.mavutils.rtps;
 
+import java.nio.ByteBuffer;
+
 //class RTPpacket
 
 import java.util.*;
@@ -27,6 +29,8 @@ public class RTPpacket{
   public int payload_size;
   //Bitstream of the RTP payload
   public byte[] payload;
+  
+  
   
   //--------------------------
   //Constructor of an RTPpacket object from header fields and payload bitstream
@@ -67,7 +71,8 @@ public class RTPpacket{
       payload = new byte[data_length];
 
       //fill payload array of byte from data (given in parameter of the constructor)
-      payload = Arrays.copyOf(data, payload_size);
+  
+      payload =  data;
   }
     
   //--------------------------
@@ -131,9 +136,9 @@ public class RTPpacket{
       //construct the packet = header + payload
       for (int i=0; i < HEADER_SIZE; i++)
           packet[i] = header[i];
-      for (int i=0; i < payload_size; i++)
-          packet[i+HEADER_SIZE] = payload[i];
-
+      
+      System.arraycopy(payload, 0, packet, HEADER_SIZE, payload_size);
+   
       //return total size of the packet
       return(payload_size + HEADER_SIZE);
   }
@@ -173,6 +178,7 @@ public class RTPpacket{
                          + ", Marker: " + Marker 
                          + ", PayloadType: " + PayloadType
                          + ", SequenceNumber: " + SequenceNumber
+                         + ", Payload: " + payload_size
                          + ", TimeStamp: " + TimeStamp);
 
   }

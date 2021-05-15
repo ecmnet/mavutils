@@ -27,9 +27,9 @@ public class WorkQueue {
 
 	private WorkQueue() {
 
-		queues.put("LP",  new Worker("LP",Thread.MIN_PRIORITY));
+		queues.put("LP",  new Worker("LP",Thread.NORM_PRIORITY-2));
 		queues.put("NP",  new Worker("NP",Thread.NORM_PRIORITY));
-		queues.put("HP",  new Worker("HP",Thread.MAX_PRIORITY));
+		queues.put("HP",  new Worker("HP",Thread.NORM_PRIORITY+2));
 
 	}
 
@@ -94,7 +94,6 @@ public class WorkQueue {
 			pool.allowCoreThreadTimeOut(false);
 			pool.setRemoveOnCancelPolicy(true);
 			pool.prestartAllCoreThreads();	
-
 		}
 
 		public int add(WorkItem item) {

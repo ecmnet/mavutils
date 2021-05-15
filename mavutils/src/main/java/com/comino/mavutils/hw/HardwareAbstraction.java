@@ -1,7 +1,10 @@
 package com.comino.mavutils.hw;
 
+import java.lang.management.GarbageCollectorMXBean;
+import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.OperatingSystemMXBean;
+import java.util.List;
 
 import com.comino.mavutils.hw.jetson.CPUTemperature;
 import com.comino.mavutils.hw.upboard.BatteryTemperature;
@@ -59,10 +62,24 @@ public class HardwareAbstraction implements Runnable {
 			battery_temp = new com.comino.mavutils.hw.upboard.BatteryTemperature();
 			System.out.println("Intel UpBoard architecture found..");
 			wifi = new WifiQuality("wlx74da38805d92");
-		//	wifi = new WifiQuality();
+			//	wifi = new WifiQuality();
 		}
 
 		mxBean = java.lang.management.ManagementFactory.getMemoryMXBean();
+
+//		try {
+//			List<GarbageCollectorMXBean> gcMxBeans = ManagementFactory.getGarbageCollectorMXBeans();
+//
+//			for (GarbageCollectorMXBean gcMxBean : gcMxBeans) {
+//				System.out.println(gcMxBean.getName());
+//				System.out.println(gcMxBean.getObjectName());
+//			}
+//
+//		} catch (RuntimeException re) {
+//			throw re;
+//		} catch (Exception exp) {
+//			throw new RuntimeException(exp);
+//		}
 
 
 	}
@@ -72,12 +89,12 @@ public class HardwareAbstraction implements Runnable {
 	}
 
 	public float getCPUTemperature() {
-      return cpu_temp.get();
+		return cpu_temp.get();
 	}
-	
+
 	public float getBatteryTemperature() {
-	      return battery_temp.get();
-		}
+		return battery_temp.get();
+	}
 
 	public byte getWifiQuality() {
 		return (byte)wifi.get();
@@ -92,18 +109,18 @@ public class HardwareAbstraction implements Runnable {
 	}
 
 	public int getCPULoad() {
-     return cpu;
+		return cpu;
 	}
 
 	public void run() {
-		
+
 		int cpu_l;
-		
+
 		memory = (int)(mxBean.getHeapMemoryUsage().getUsed() * 100 /mxBean.getHeapMemoryUsage().getMax());
 
 		cpu_temp.determine();
 		wifi.getQuality();
-		
+
 		if(archid == UPBOARD)
 			battery_temp.determine();
 
