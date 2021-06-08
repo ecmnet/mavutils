@@ -40,19 +40,19 @@ public class WorkQueue {
 	public int addSingleTask(String queue, int delay_ms, Runnable runnable) {
 		return queues.get(queue).add(new WorkItem(runnable.getClass().getCanonicalName(),runnable ,delay_ms, true));
 	}
-	
+
 	public int addSingleTask(String queue, Runnable runnable) {
 		return queues.get(queue).add(new WorkItem(runnable.getClass().getCanonicalName(),runnable ,0, true));
 	}
 
 	public void removeTask(String queue, int id) {
 		if(id > 0)
-		  queues.get(queue).remove(id);
+			queues.get(queue).remove(id);
 	}
-	
+
 	public boolean isInQueue(String queue, int id) {
 		if(id > 0)
-		return queues.get(queue).isInQueue(id);
+			return queues.get(queue).isInQueue(id);
 		return false;
 	}
 
@@ -104,21 +104,21 @@ public class WorkQueue {
 			queue.put(id,item);	
 			return id;
 		}
-		
+
 		public void remove(int id) {
-			
+
 			if(queue.remove(id) == null)
 				return;
-			
+
 			System.err.println(id+" removed");
-			
-		    min_cycle_ns = Long.MAX_VALUE;
-		    queue.forEach((i,w) -> {
-		    	if(w.cycle_ns < min_cycle_ns)
-		    		min_cycle_ns = w.cycle_ns;
-		    });	
+
+			min_cycle_ns = Long.MAX_VALUE;
+			queue.forEach((i,w) -> {
+				if(w.cycle_ns < min_cycle_ns)
+					min_cycle_ns = w.cycle_ns;
+			});	
 		}
-		
+
 		public boolean isInQueue(int id) {
 			return queue.containsKey(id);
 		}
@@ -185,7 +185,12 @@ public class WorkQueue {
 		private boolean            once;
 
 		public WorkItem(String name, Runnable runnable, int cycle_ms, boolean once) {
-			this.name           = name;
+			
+			if(name == null)
+				this.name = " unknown";
+			else
+				this.name           = name;
+			
 			this.runnable       = runnable;
 			this.cycle_ns       = (long)cycle_ms * ns_ms;
 			this.act_cycle      = 0;
@@ -224,11 +229,11 @@ public class WorkQueue {
 		final long tms = System.currentTimeMillis();
 
 		int id = q.addCyclicTask("LP", 50,  () ->  { try { Thread.sleep(10); } catch (InterruptedException e) {} });
-//		q.addCyclicTask("LP", 50,  () ->  { try { Thread.sleep(2);  } catch (InterruptedException e) {} });
+		//		q.addCyclicTask("LP", 50,  () ->  { try { Thread.sleep(2);  } catch (InterruptedException e) {} });
 		q.addCyclicTask("LP", 100, () ->  { try { Thread.sleep(20); } catch (InterruptedException e) {} });
-//		q.addCyclicTask("NP", 200, () ->  { try { Thread.sleep(2);  } catch (InterruptedException e) {} });
-//		q.addCyclicTask("HP", 500, () ->  { try { Thread.sleep(5);  } catch (InterruptedException e) {} });
-//		q.addSingleTask("LP", 1000, () -> {  System.out.println("1: "+(System.currentTimeMillis()-tms)); });
+		//		q.addCyclicTask("NP", 200, () ->  { try { Thread.sleep(2);  } catch (InterruptedException e) {} });
+		//		q.addCyclicTask("HP", 500, () ->  { try { Thread.sleep(5);  } catch (InterruptedException e) {} });
+		//		q.addSingleTask("LP", 1000, () -> {  System.out.println("1: "+(System.currentTimeMillis()-tms)); });
 		q.addSingleTask("LP", 3000, () -> { 
 			try { System.out.println("Remove: "+id); q.removeTask("LP",id);
 			} catch( Exception e ) {e.printStackTrace(); }
