@@ -189,6 +189,8 @@ public class MSPMathUtils {
 	}
 	
 	public static double normAngle(double a, double center) {
+		    if(Double.isInfinite(a))
+		    	return 0;
             return a - PI2 * Math.floor((a + Math.PI - center) / PI2);
      }
 
