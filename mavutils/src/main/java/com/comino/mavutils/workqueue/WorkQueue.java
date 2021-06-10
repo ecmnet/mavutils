@@ -87,6 +87,7 @@ public class WorkQueue {
 		private long       tms          = 0;
 		private int        exceeded     = 0;
 		private boolean    isRunning    = false;
+		private long       total_exec   = 0;
 
 		public Worker(String name, int priority) {
 			this.name = name;
@@ -144,9 +145,12 @@ public class WorkQueue {
 		}
 
 		public void print() {
+			total_exec = 0;
 			queue.forEach((i,w) -> {
+				total_exec += w.getExecTime_us();
 				System.out.println(" ->  "+w);
 			});
+			System.out.println(" ->  remaining  "+(min_cycle_ns/1000 - total_exec)+"us");
 		}
 
 		@Override
@@ -187,7 +191,7 @@ public class WorkQueue {
 		public WorkItem(String name, Runnable runnable, int cycle_ms, boolean once) {
 			
 			if(name == null)
-				this.name = " unknown";
+				this.name = "unknown";
 			else
 				this.name           = name;
 			
@@ -205,6 +209,10 @@ public class WorkQueue {
 			if(act_cycle>0)
 				return String.format("%3.1f",1000f/act_cycle)+"Hz\t"+act_exec +"us\t"+name;
 			return "\t"+name;
+		}
+		
+		public long getExecTime_us() {
+			return act_exec;
 		}
 
 		public void run() {
