@@ -65,21 +65,6 @@ public class HardwareAbstraction implements Runnable {
 			//	wifi = new WifiQuality();
 		}
 
-		mxBean = java.lang.management.ManagementFactory.getMemoryMXBean();
-
-//		try {
-//			List<GarbageCollectorMXBean> gcMxBeans = ManagementFactory.getGarbageCollectorMXBeans();
-//
-//			for (GarbageCollectorMXBean gcMxBean : gcMxBeans) {
-//				System.out.println(gcMxBean.getName());
-//				System.out.println(gcMxBean.getObjectName());
-//			}
-//
-//		} catch (RuntimeException re) {
-//			throw re;
-//		} catch (Exception exp) {
-//			throw new RuntimeException(exp);
-//		}
 
 
 	}
@@ -114,9 +99,9 @@ public class HardwareAbstraction implements Runnable {
 
 	public void run() {
 
-		int cpu_l;
+		float cpu_l;
 
-		memory = (int)(mxBean.getHeapMemoryUsage().getUsed() * 100 /mxBean.getHeapMemoryUsage().getMax());
+		memory = (int)(mxBean.getHeapMemoryUsage().getUsed() * 100 / mxBean.getHeapMemoryUsage().getMax());
 
 		cpu_temp.determine();
 		wifi.getQuality();
@@ -126,7 +111,9 @@ public class HardwareAbstraction implements Runnable {
 
 		try {
 			cpu_l = LinuxUtils.getProcessCpuLoad();
-			if(cpu_l > 0) cpu = (int)(cpu*0.7f + cpu_l*0.3f);
+			if(cpu_l > 0) {
+				cpu = (int)(cpu*0.7f + cpu_l*0.3f);
+			}
 		} catch (Exception e) {	}
 	}
 
