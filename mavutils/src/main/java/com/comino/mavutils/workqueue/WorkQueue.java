@@ -50,12 +50,12 @@ public class WorkQueue {
 			queues.get(queue).remove(id);
 	}
 	
-	public void changeCycle(String queue, int id, int new_cycle_ms) {
+	public void changeCycle(String queue, int id, int new_cycle_ms) throws WorkQueueException {
 		if(id > 0)
 			queues.get(queue).changeCycle(id, new_cycle_ms);
 	}
 	
-	public void pause(String queue, int id, boolean isPaused) {
+	public void pause(String queue, int id, boolean isPaused) throws WorkQueueException {
 		if(id > 0)
 			queues.get(queue).pause(id, isPaused);
 	}
@@ -116,20 +116,20 @@ public class WorkQueue {
 			return id;
 		}
 		
-		public void pause(int id, boolean isPaused) {
+		public void pause(int id, boolean isPaused) throws WorkQueueException {
 			WorkItem w = queue.get(id);
 			if(w!=null)
 				w.pause(isPaused);
 			else
-				System.err.println("Task "+id+" could not be paused");
+				throw new WorkQueueException("Task "+id+" could not be paused");
 		}
 		
-		public void changeCycle(int id, int new_cycle_ms) {
+		public void changeCycle(int id, int new_cycle_ms) throws WorkQueueException {
 			WorkItem w = queue.get(id);
 			if(w!=null && min_cycle_ns < (new_cycle_ms * ns_ms)) 
 				w.setCycle(new_cycle_ms);
 			else
-				System.err.println("CycleRate for task "+id+" could not be changed to "+new_cycle_ms+"ms");
+				throw new WorkQueueException("CycleRate for task "+id+" could not be changed to "+new_cycle_ms+"ms");
 		}
 
 		public void remove(int id) {
@@ -232,9 +232,13 @@ public class WorkQueue {
 
 		public String toString() {
 			if(once)
-				return (cycle_ns/ns_ms)+"ms\t"+act_exec +"us\t"+name;
-			if(act_cycle>0)
 				return String.format("%3.1f",1000f/act_cycle)+"Hz\t"+act_exec +"us\t"+name;
+			if(act_cycle>0) {
+				if(!isPaused)
+				  return (cycle_ns/ns_ms)+"ms\t"+act_exec +"us\t"+name+" ("+String.format("%3.1f",(float)cycle_ns/ns_ms)+"ms)";
+				else
+					return (cycle_ns/ns_ms)+"ms\t"+act_exec +"us\t"+name+" ("+String.format("%3.1f",(float)cycle_ns/ns_ms)+"ms, paused)";
+			}
 			return "\t"+name;
 		}
 		
@@ -271,7 +275,7 @@ public class WorkQueue {
 
 		final long tms = System.currentTimeMillis();
 
-		int id = q.addCyclicTask("LP", 50,  () ->  { try { Thread.sleep(10); } catch (InterruptedException e) {} });
+		int id = q.addCyclicTask("LP", 50,  () ->  { try { Thread.sleep(10); System.out.print("."); } catch (InterruptedException e) {} });
 		//		q.addCyclicTask("LP", 50,  () ->  { try { Thread.sleep(2);  } catch (InterruptedException e) {} });
 		q.addCyclicTask("LP", 100, () ->  { try { Thread.sleep(20); } catch (InterruptedException e) {} });
 		//		q.addCyclicTask("NP", 200, () ->  { try { Thread.sleep(2);  } catch (InterruptedException e) {} });
@@ -281,6 +285,17 @@ public class WorkQueue {
 			try { System.out.println("Remove: "+id); q.removeTask("LP",id);
 			} catch( Exception e ) {e.printStackTrace(); }
 		});
+		
+		q.addSingleTask("LP", 1000, () -> { 
+			try { System.out.println("PAUSED: "+id); q.pause("LP",id,true);
+			} catch( Exception e ) {e.printStackTrace(); }
+		});
+		
+		q.addSingleTask("LP", 1500, () -> { 
+			try { System.out.println("RESUMED: "+id); q.pause("LP",id,false);
+			} catch( Exception e ) {e.printStackTrace(); }
+		});
+		
 		q.addCyclicTask("HP", 10,  () ->  { try { Thread.sleep(2);  } catch (InterruptedException e) {} });
 
 		q.start();
