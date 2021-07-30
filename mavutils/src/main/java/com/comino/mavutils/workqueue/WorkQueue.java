@@ -49,6 +49,16 @@ public class WorkQueue {
 		if(id > 0)
 			queues.get(queue).remove(id);
 	}
+	
+	public void changeCycle(String queue, int id, int new_cycle_ms) {
+		if(id > 0)
+			queues.get(queue).changeCycle(id, new_cycle_ms);
+	}
+	
+	public void pause(String queue, int id, boolean isPaused) {
+		if(id > 0)
+			queues.get(queue).pause(id, isPaused);
+	}
 
 	public boolean isInQueue(String queue, int id) {
 		if(id > 0)
@@ -104,6 +114,22 @@ public class WorkQueue {
 			}
 			queue.put(id,item);	
 			return id;
+		}
+		
+		public void pause(int id, boolean isPaused) {
+			WorkItem w = queue.get(id);
+			if(w!=null)
+				w.pause(isPaused);
+			else
+				System.err.println("Task "+id+" could not be paused");
+		}
+		
+		public void changeCycle(int id, int new_cycle_ms) {
+			WorkItem w = queue.get(id);
+			if(w!=null && min_cycle_ns < (new_cycle_ms * ns_ms)) 
+				w.setCycle(new_cycle_ms);
+			else
+				System.err.println("CycleRate for task "+id+" could not be changed to "+new_cycle_ms+"ms");
 		}
 
 		public void remove(int id) {
@@ -187,6 +213,7 @@ public class WorkQueue {
 		private long          act_cycle;
 		private int               count;
 		private boolean            once;
+		private boolean        isPaused;
 
 		public WorkItem(String name, Runnable runnable, int cycle_ms, boolean once) {
 			
@@ -214,10 +241,18 @@ public class WorkQueue {
 		public long getExecTime_us() {
 			return act_exec;
 		}
+		
+		public void setCycle(int new_cycle_ms) {
+			this.cycle_ns       = (long)new_cycle_ms * ns_ms;
+		}
+		
+		public void pause(boolean isPaused) {
+			this.isPaused = isPaused;
+		}
 
 		public void run() {
 			try { 
-				if((System.nanoTime() - last_exec) >= cycle_ns) {
+				if((System.nanoTime() - last_exec) >= cycle_ns && !isPaused) {
 					count++;
 					if(last_exec > 0)
 						act_cycle =  ( System.nanoTime() - last_exec) / ns_ms  ;
