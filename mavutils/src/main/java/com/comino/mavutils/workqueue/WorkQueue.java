@@ -126,10 +126,10 @@ public class WorkQueue {
 		
 		public void changeCycle(int id, int new_cycle_ms) throws WorkQueueException {
 			WorkItem w = queue.get(id);
-			if(w!=null && min_cycle_ns < (new_cycle_ms * ns_ms)) 
+			if(w!=null && min_cycle_ns <= (new_cycle_ms * ns_ms)) 
 				w.setCycle(new_cycle_ms);
 			else
-				throw new WorkQueueException("CycleRate for task "+id+" could not be changed to "+new_cycle_ms+"ms");
+				throw new WorkQueueException("CycleRate not changed for task "+id);
 		}
 
 		public void remove(int id) {
@@ -247,7 +247,7 @@ public class WorkQueue {
 		}
 		
 		public void setCycle(int new_cycle_ms) {
-			this.cycle_ns       = (long)new_cycle_ms * ns_ms;
+			this.cycle_ns = (long)new_cycle_ms * ns_ms;
 		}
 		
 		public void pause(boolean isPaused) {
