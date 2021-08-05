@@ -235,9 +235,9 @@ public class WorkQueue {
 				return String.format("%3.1f",1000f/act_cycle)+"Hz\t"+act_exec +"us\t"+name;
 			if(act_cycle>0) {
 				if(!isPaused)
-				  return (cycle_ns/ns_ms)+"ms\t"+act_exec +"us\t"+name+" ("+String.format("%3.1f",(float)cycle_ns/ns_ms)+"ms)";
+				  return (cycle_ns/ns_ms)+"ms\t"+act_exec +"us\t"+name+" ("+String.format("%3f",(float)cycle_ns/ns_ms)+"ms)";
 				else
-					return (cycle_ns/ns_ms)+"ms\t"+act_exec +"us\t"+name+" ("+String.format("%3.1f",(float)cycle_ns/ns_ms)+"ms, paused)";
+					return (cycle_ns/ns_ms)+"ms\t"+act_exec +"us\t"+name+" ("+String.format("%3f",(float)cycle_ns/ns_ms)+"ms, paused)";
 			}
 			return "\t"+name;
 		}
