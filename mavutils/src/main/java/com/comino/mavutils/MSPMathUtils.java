@@ -35,20 +35,16 @@ package com.comino.mavutils;
 
 public class MSPMathUtils {
 
-	public static final double  DBL_EPSILON 					= 2.2204460492503131e-16d;
-
-	public static final double 	toRad   					  	= Math.PI / 180.0;
-	public static final double 	fromRad 					  	= 180.0 / Math.PI ;
-
-	public static final float PI2							    = 2f*(float)Math.PI;
-
-	private static final double 	CONSTANTS_RADIUS_OF_EARTH  	= 6371000.0;
-	private static  Reference   	ref                         	= new Reference();
-
+	public static final double 	TO_RAD   					= Math.PI / 180.0;
+	public static final double 	FROM_RAD 					= 180.0 / Math.PI ;
+	public static final float   PI2							= 2f*(float)Math.PI;
+	private static final double CONSTANTS_RADIUS_OF_EARTH  	= 6371000.0;
+	
+	private static  Reference   ref                         = new Reference();
 
 	public static void map_projection_init(double lat0, double lon0) {
-		ref.lat_rad = lat0 * toRad;
-		ref.lon_rad = lon0 * toRad;
+		ref.lat_rad = lat0 * TO_RAD;
+		ref.lon_rad = lon0 * TO_RAD;
 		ref.sin_lat = Math.sin(ref.lat_rad);
 		ref.cos_lat = Math.cos(ref.lat_rad);
 		ref.init    = true;
@@ -81,24 +77,21 @@ public class MSPMathUtils {
 		if(!ref.init)
 			return false;
 
-		double lat_rad = lat * toRad;
-		double lon_rad = lon * toRad;
+		double lat_rad = lat * TO_RAD;
+		double lon_rad = lon * TO_RAD;
 
 		double sin_lat = Math.sin(lat_rad);
 		double cos_lat = Math.cos(lat_rad);
 		double cos_d_lon = Math.cos(lon_rad - ref.lon_rad);
 
 		double arg = ref.sin_lat * sin_lat + ref.cos_lat * cos_lat * cos_d_lon;
-
-		if (arg > 1.0) {
-			arg = 1.0;
-
-		} else if (arg < -1.0) {
-			arg = -1.0;
-		}
-
 		double c = Math.acos(arg);
-		double k = (Math.abs(c) < DBL_EPSILON) ? 1.0 : (c / Math.sin(c));
+		
+		double k = 1.0;
+
+		if (Math.abs(c) > 0) {
+			k = (c / Math.sin(c));
+		}
 
 		xy[0] = (float)(k * (ref.cos_lat * sin_lat - ref.sin_lat * cos_lat * cos_d_lon) * CONSTANTS_RADIUS_OF_EARTH);
 		xy[1] = (float)(k * cos_lat * Math.sin(lon_rad - ref.lon_rad) * CONSTANTS_RADIUS_OF_EARTH );
@@ -113,14 +106,17 @@ public class MSPMathUtils {
 
 		double x_rad = (double)x / CONSTANTS_RADIUS_OF_EARTH;
 		double y_rad = (double)y / CONSTANTS_RADIUS_OF_EARTH;
+		
 		double c = Math.sqrt(x_rad * x_rad + y_rad * y_rad);
-		double sin_c = Math.sin(c);
-		double cos_c = Math.cos(c);
 
 		double lat_rad;
 		double lon_rad;
 
-		if (Math.abs(c) > DBL_EPSILON) {
+		if (Math.abs(c) > 0) {
+			
+			double sin_c = Math.sin(c);
+			double cos_c = Math.cos(c);
+			
 			lat_rad = Math.asin(cos_c * ref.sin_lat + (x_rad * sin_c * ref.cos_lat) / c);
 			lon_rad = (ref.lon_rad + Math.atan2(y_rad * sin_c, c * ref.cos_lat * cos_c - x_rad * ref.sin_lat * sin_c));
 		} else {
@@ -128,8 +124,8 @@ public class MSPMathUtils {
 			lon_rad = ref.lon_rad;
 		}
 
-		latlon[0] = lat_rad * fromRad;
-		latlon[1] = lon_rad * fromRad;
+		latlon[0] = lat_rad * FROM_RAD;
+		latlon[1] = lon_rad * FROM_RAD;
 
 		return true;
 	}
@@ -139,9 +135,9 @@ public class MSPMathUtils {
 
 
 		float distance = (float) (
-				Math.acos(Math.sin(lat1*toRad) * Math.sin(lat1*toRad)
-						+ Math.cos(lat1*toRad) * Math.cos(lat2*toRad) *
-						Math.cos((lon2 - lon1)*toRad)
+				Math.acos(Math.sin(lat1*TO_RAD) * Math.sin(lat1*TO_RAD)
+						+ Math.cos(lat1*TO_RAD) * Math.cos(lat2*TO_RAD) *
+						Math.cos((lon2 - lon1)*TO_RAD)
 						)
 				* CONSTANTS_RADIUS_OF_EARTH );
 
@@ -160,20 +156,20 @@ public class MSPMathUtils {
 	}
 
 	public static float fromRad(double radians) {
-		float deg = (float)(radians * fromRad ) % 360;
+		float deg = (float)(radians * FROM_RAD ) % 360;
 		if(deg<0) deg += 360;
 		return deg;
 
 	}
 	
 	public static float fromRad2(double radians) {
-		float deg = (float)(radians * fromRad ) % 360;
+		float deg = (float)(radians * FROM_RAD ) % 360;
 		return deg;
 
 	}
 
 	public static float toRad(double angle) {
-		return (float)(angle * toRad);
+		return (float)(angle * TO_RAD);
 	}
 
 	public static float[] rotateRad(float[] rotated, float posx, float posy, float heading_rad) {
