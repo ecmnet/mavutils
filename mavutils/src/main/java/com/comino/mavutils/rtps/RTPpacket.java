@@ -7,6 +7,8 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 public class RTPpacket{
+	
+  public static final int MAX_PAYLOAD = 65515;
 
   //size of the RTP header:
   static int HEADER_SIZE = 12;
@@ -23,7 +25,7 @@ public class RTPpacket{
   public int Ssrc;
   
   //Bitstream of the RTP header
-  public byte[] header;
+  public final byte[] header;
 
   //size of the RTP payload
   public int payload_size;
@@ -31,10 +33,6 @@ public class RTPpacket{
   public byte[] payload;
   
   
-  
-  //--------------------------
-  //Constructor of an RTPpacket object from header fields and payload bitstream
-  //--------------------------
   public RTPpacket(int PType, int Framenb, int Time, byte[] data, int data_length){
       //fill by default header fields:
       Version = 2;
@@ -68,10 +66,6 @@ public class RTPpacket{
 
       //fill the payload bitstream:
       payload_size = data_length;
-      payload = new byte[data_length];
-
-      //fill payload array of byte from data (given in parameter of the constructor)
-  
       payload =  data;
   }
     
@@ -87,12 +81,13 @@ public class RTPpacket{
       CC = 0;
       Marker = 0;
       Ssrc = 0;
+      header = new byte[HEADER_SIZE];
 
       //check if total packet size is lower than the header size
       if (packet_size >= HEADER_SIZE) 
       {
           //get the header bitsream:
-          header = new byte[HEADER_SIZE];
+  
           for (int i=0; i < HEADER_SIZE; i++)
               header[i] = packet[i];
 
@@ -113,9 +108,8 @@ public class RTPpacket{
   
   public int getpayload(byte[] data) {
 
-      for (int i=0; i < payload_size; i++)
-          data[i] = payload[i];
-
+	  System.arraycopy(payload, 0, data, 0, payload_size);
+      
       return(payload_size);
   }
   
@@ -133,10 +127,8 @@ public class RTPpacket{
   
   public int getpacket(byte[] packet)
   {
-      //construct the packet = header + payload
-      for (int i=0; i < HEADER_SIZE; i++)
-          packet[i] = header[i];
-      
+
+      System.arraycopy(header, 0, packet, 0, HEADER_SIZE);
       System.arraycopy(payload, 0, packet, HEADER_SIZE, payload_size);
    
       //return total size of the packet
