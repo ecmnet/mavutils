@@ -8,10 +8,11 @@ import java.util.*;
 
 public class RTPpacket{
 	
-  public static final int MAX_PAYLOAD = 65515;
-
+	
   //size of the RTP header:
-  static int HEADER_SIZE = 12;
+  private static int HEADER_SIZE = 12;
+  public static final int MAX_PAYLOAD = 65515-HEADER_SIZE;
+
 
   //Fields that compose the RTP header
   public int Version;
