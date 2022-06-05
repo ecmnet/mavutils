@@ -37,7 +37,7 @@ public class BatteryTemperature implements IMeasurement  {
 		bus.read(buffer, 2);
 		temp = ( buffer.get(0) << 8 | buffer.get(1) ) / 256.0f - 0.5f;
 	
-		} catch (IOException e) { temp = 0; }
+		} catch (IOException e) { temp = Float.NaN; }
 		
 	}
 

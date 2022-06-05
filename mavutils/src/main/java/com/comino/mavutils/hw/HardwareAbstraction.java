@@ -51,18 +51,23 @@ public class HardwareAbstraction implements Runnable {
 		}
 		else if (arch.contains("x86_64")){
 			archid = SITL;
+			wifi = new WifiQuality(null);
 			cpu_temp = new com.comino.mavutils.hw.upboard.CPUTemperature();
 			battery_temp = new com.comino.mavutils.hw.sitl.BatteryTemperature();
 			System.out.println("Intel SITL architecture found..");
 			wifi = new WifiQuality(null);
 		}
 		else if (arch.contains("amd64")){
-			archid = UPBOARD;
+			archid = SITL;
+			//archid = UPBOARD;
 			cpu_temp = new com.comino.mavutils.hw.upboard.CPUTemperature();
-			battery_temp = new com.comino.mavutils.hw.upboard.BatteryTemperature();
+			//battery_temp = new com.comino.mavutils.hw.upboard.BatteryTemperature();
 			System.out.println("Intel UpBoard architecture found..");
-			wifi = new WifiQuality("wlx74da38805d92");
+		//	wifi = new WifiQuality("wlx74da38805d92");
 			//	wifi = new WifiQuality();
+			
+			wifi = new WifiQuality(null);
+			battery_temp = new com.comino.mavutils.hw.sitl.BatteryTemperature();
 		}
 
 
