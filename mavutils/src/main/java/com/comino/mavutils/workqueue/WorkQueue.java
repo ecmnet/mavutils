@@ -40,6 +40,11 @@ public class WorkQueue {
 	public int addSingleTask(String queue, int delay_ms, Runnable runnable) {
 		return queues.get(queue).add(new WorkItem(runnable.getClass().getCanonicalName(),runnable ,delay_ms, true));
 	}
+	
+	public int rescheduleSingleTask(String queue, int id, int delay_ms, Runnable runnable) {
+		removeTask(queue,id);
+		return queues.get(queue).add(new WorkItem(runnable.getClass().getCanonicalName(),runnable ,delay_ms, true));
+	}
 
 	public int addSingleTask(String queue, Runnable runnable) {
 		return queues.get(queue).add(new WorkItem(runnable.getClass().getCanonicalName(),runnable ,0, true));
