@@ -37,7 +37,7 @@ public class MSPMathUtils {
 
 	public static final double 	TO_RAD   					= Math.PI / 180.0;
 	public static final double 	FROM_RAD 					= 180.0 / Math.PI ;
-	public static final float   PI2							= 2f*(float)Math.PI;
+	public static final double   PI2						= 2f*Math.PI;
 	private static final double CONSTANTS_RADIUS_OF_EARTH  	= 6371000.0;
 	
 	private static  Reference   ref                         = new Reference();
@@ -65,6 +65,10 @@ public class MSPMathUtils {
 		 }
 
 		 return (float)Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
+	}
+	
+	public static void reset_map_projection() {
+		ref.init = false;
 	}
 
 	public static boolean is_projection_initialized() {
@@ -196,7 +200,7 @@ public class MSPMathUtils {
 
 	public static float normAngle2(float angle) {
 		angle = normAngle(angle);
-		  if(angle > (float)Math.PI) return  - (PI2 - angle);
+		  if(angle > (float)Math.PI) return  (float)- (PI2 - angle);
 		return angle;
 	}
 
