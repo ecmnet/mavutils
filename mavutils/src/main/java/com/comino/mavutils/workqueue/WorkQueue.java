@@ -142,8 +142,6 @@ public class WorkQueue {
 			if(queue.remove(id) == null)
 				return;
 
-			System.err.println("Task "+id+" removed");
-
 			min_cycle_ns = Long.MAX_VALUE;
 			queue.forEach((i,w) -> {
 				if(w.cycle_ns < min_cycle_ns)
