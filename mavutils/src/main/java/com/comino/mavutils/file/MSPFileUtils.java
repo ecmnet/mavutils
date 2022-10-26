@@ -23,13 +23,18 @@ public class MSPFileUtils {
 				jarFilePath = URLDecoder.decode(jarFilePath, "UTF-8");
 				jarFile = new File(jarFilePath);
 			}
-			System.out.println("Path searched in "+jarFile.getParentFile().getAbsolutePath());
+			//System.out.println("Path searched in "+jarFile.getParentFile().getAbsolutePath());
 			return jarFile.getParentFile().getAbsolutePath();
 
 		} catch(Exception e) {
 			System.out.println("Path not found: "+e.getMessage());
 			return null;
 		}
+	}
+	
+	public static boolean exists(String path) {
+		File f = new File(path);
+		return f.exists();
 	}
 
 }
