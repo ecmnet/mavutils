@@ -39,7 +39,7 @@ public class MSPMathUtils {
 	public static final double 	FROM_RAD 					= 180.0 / Math.PI ;
 	public static final double   PI2						= 2f*Math.PI;
 	private static final double CONSTANTS_RADIUS_OF_EARTH  	= 6371000.0;
-	
+
 	private static  Reference   ref                         = new Reference();
 
 	public static void map_projection_init(double lat0, double lon0) {
@@ -56,17 +56,17 @@ public class MSPMathUtils {
 		if(!ref.init)
 			map_projection_init(lat,lon);
 
-		 map_projection_project(lat,  lon,  p1);
-		 map_projection_project(lat2, lon2, p2);
+		map_projection_project(lat,  lon,  p1);
+		map_projection_project(lat2, lon2, p2);
 
-		 if(translation != null) {
-			 translation[0] = p2[0] - p1[0];
-			 translation[1] = p2[1] - p1[1];
-		 }
+		if(translation != null) {
+			translation[0] = p2[0] - p1[0];
+			translation[1] = p2[1] - p1[1];
+		}
 
-		 return (float)Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
+		return (float)Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
 	}
-	
+
 	public static void reset_map_projection() {
 		ref.init = false;
 	}
@@ -90,7 +90,7 @@ public class MSPMathUtils {
 
 		double arg = ref.sin_lat * sin_lat + ref.cos_lat * cos_lat * cos_d_lon;
 		double c = Math.acos(arg);
-		
+
 		double k = 1.0;
 
 		if (Math.abs(c) > 0) {
@@ -110,17 +110,17 @@ public class MSPMathUtils {
 
 		double x_rad = (double)x / CONSTANTS_RADIUS_OF_EARTH;
 		double y_rad = (double)y / CONSTANTS_RADIUS_OF_EARTH;
-		
+
 		double c = Math.sqrt(x_rad * x_rad + y_rad * y_rad);
 
 		double lat_rad;
 		double lon_rad;
 
 		if (Math.abs(c) > 0) {
-			
+
 			double sin_c = Math.sin(c);
 			double cos_c = Math.cos(c);
-			
+
 			lat_rad = Math.asin(cos_c * ref.sin_lat + (x_rad * sin_c * ref.cos_lat) / c);
 			lon_rad = (ref.lon_rad + Math.atan2(y_rad * sin_c, c * ref.cos_lat * cos_c - x_rad * ref.sin_lat * sin_c));
 		} else {
@@ -165,7 +165,7 @@ public class MSPMathUtils {
 		return deg;
 
 	}
-	
+
 	public static float fromRad2(double radians) {
 		float deg = (float)(radians * FROM_RAD ) % 360;
 		return deg;
@@ -187,21 +187,26 @@ public class MSPMathUtils {
 		if(!Float.isNaN(min) && value < min) return min;
 		return value;
 	}
-	
-	public static double normAngle(double a, double center) {
-		    if(Double.isInfinite(a))
-		    	return 0;
-            return a - PI2 * Math.floor((a + Math.PI - center) / PI2);
-     }
 
-	public static float normAngle(float angle) {
-         return (float)normAngle(angle,0);
+	public static double normAngle(double a, double center) {
+		if(Double.isInfinite(a))
+			return 0;
+		return a - PI2 * Math.floor((a + Math.PI - center) / PI2);
+	}
+
+	public static float normAngle(float a) {
+		return a - (float)PI2 * (float)Math.floor((a + (float)Math.PI - 0.5f) / (float)PI2);
+
 	}
 
 	public static float normAngle2(float angle) {
 		angle = normAngle(angle);
-		  if(angle > (float)Math.PI) return  (float)- (PI2 - angle);
+		if(angle > (float)Math.PI) return  (float)- (PI2 - angle);
 		return angle;
+	}
+
+	public static float normAngle(float angle1, float angle2, float center) {
+		return (float)normAngle(Math.abs(angle1 - angle2), center);
 	}
 
 
@@ -210,11 +215,11 @@ public class MSPMathUtils {
 	}
 
 	public static float expo(float x, float e) {
-          return (1 - e) * x + e * x * x * x;
+		return (1 - e) * x + e * x * x * x;
 	}
 
 	public static float superexpo(float x, float e, float g) {
-        return expo(x, e) * (1 - g) / (1 - Math.abs(x) * g);
+		return expo(x, e) * (1 - g) / (1 - Math.abs(x) * g);
 	}
 
 	private static class Reference {
@@ -227,11 +232,11 @@ public class MSPMathUtils {
 
 
 	}
-	
+
 	public static void main(String[] args)  {
 		float a = toRad(-360);
 		float b = toRad( 359);
-	
+
 		System.out.println(fromRad2(normAngle(b-a)));
 	}
 }
