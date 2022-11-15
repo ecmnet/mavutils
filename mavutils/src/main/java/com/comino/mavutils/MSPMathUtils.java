@@ -166,7 +166,7 @@ public class MSPMathUtils {
 
 	}
 
-	public static float fromRad2(double radians) {
+	public static float fromRadSigned(double radians) {
 		float deg = (float)(radians * FROM_RAD ) % 360;
 		return deg;
 
@@ -193,6 +193,7 @@ public class MSPMathUtils {
 			return 0;
 		return a - PI2 * Math.floor((a + Math.PI - center) / PI2);
 	}
+	
 
 	public static float normAngle(float a) {
 		return a - (float)PI2 * (float)Math.floor((a + (float)Math.PI - 0.5f) / (float)PI2);
@@ -211,7 +212,7 @@ public class MSPMathUtils {
 
 
 	public static float normAngleDiff(float angle1, float angle2) {
-		return normAngle(Math.abs(angle1 - angle2));
+		return (float)normAngle(Math.abs(angle1 - angle2),0.5);
 	}
 
 	public static float expo(float x, float e) {
@@ -237,7 +238,7 @@ public class MSPMathUtils {
 		float a = toRad(-360);
 		float b = toRad( 359);
 
-		System.out.println(fromRad2(normAngle(b-a)));
+		System.out.println(fromRadSigned(normAngle(b-a)));
 	}
 }
 
