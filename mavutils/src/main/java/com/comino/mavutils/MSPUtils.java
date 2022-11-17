@@ -1,10 +1,13 @@
 package com.comino.mavutils;
 
+import java.text.DecimalFormat;
+
 public class MSPUtils {
 
 	private static MSPUtils instance=null;
 
-	private boolean enable = false;
+	private final boolean       enable;
+	private final DecimalFormat time_formatter;
 
 	public static MSPUtils getInstance(boolean enable) {
 		if(instance==null)
@@ -19,7 +22,8 @@ public class MSPUtils {
 	}
 
 	private MSPUtils(boolean enable) {
-		this.enable = enable;
+		this.enable         = enable;
+		this.time_formatter = new DecimalFormat("#0.00s");
 	}
 
 	public void out(Object x) {
@@ -32,6 +36,10 @@ public class MSPUtils {
 		if(!enable)
 			return;
 		System.err.println(x);
+	}
+	
+	public String time(float t) {
+		return time_formatter.format(t);
 	}
 
 }
