@@ -3,9 +3,7 @@ package com.comino.mavutils.hw.upboard;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
-import java.util.concurrent.TimeUnit;
 
-import com.comino.mavutils.legacy.ExecutorService;
 import com.comino.mavutils.workqueue.WorkQueue;
 
 
