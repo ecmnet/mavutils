@@ -36,26 +36,28 @@ public class HardwareAbstraction implements Runnable {
 		return instance;
 	}
 
-	private HardwareAbstraction() {
+	private HardwareAbstraction(){
 
 		mxBean = java.lang.management.ManagementFactory.getMemoryMXBean();
 		osBean =  java.lang.management.ManagementFactory.getOperatingSystemMXBean();
 		arch = osBean.getArch();
+		
+		if (arch.contains("x86_64") || (osBean.getName().contains("Mac"))){
+			archid = SITL;
+			wifi = new WifiQuality(null);
+			cpu_temp = new com.comino.mavutils.hw.upboard.CPUTemperature();
+			battery_temp = new com.comino.mavutils.hw.sitl.BatteryTemperature();
+			System.out.println("Intel/Arm SITL architecture found..");
+			wifi = new WifiQuality(null);
+		}
 
-		if(arch.contains("aarch64")) {
+		else if(arch.contains("aarch64")) {
 			archid = JETSON;
 			cpu_temp = new com.comino.mavutils.hw.jetson.CPUTemperature();
 			battery_temp = new com.comino.mavutils.hw.sitl.BatteryTemperature();
 			System.out.println("Jetson Nano architecture found..");
 			wifi = new WifiQuality("wlan0");
-		}
-		else if (arch.contains("x86_64")){
-			archid = SITL;
-			wifi = new WifiQuality(null);
-			cpu_temp = new com.comino.mavutils.hw.upboard.CPUTemperature();
-			battery_temp = new com.comino.mavutils.hw.sitl.BatteryTemperature();
-			System.out.println("Intel SITL architecture found..");
-			wifi = new WifiQuality(null);
+		
 		}
 		else if (arch.contains("amd64")){
 			archid = SITL;
