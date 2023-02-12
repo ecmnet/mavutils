@@ -164,6 +164,7 @@ public class WorkQueue {
 
 			isRunning = true;
 			System.out.println("WorkQueue "+name+" started ("+min_cycle_ns/ns_ms+"ms)");
+			pool.setCorePoolSize(1);
 			pool.submit(this);
 		}
 

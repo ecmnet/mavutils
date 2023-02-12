@@ -42,7 +42,7 @@ public class HardwareAbstraction implements Runnable {
 		osBean =  java.lang.management.ManagementFactory.getOperatingSystemMXBean();
 		arch = osBean.getArch();
 		
-		if (arch.contains("x86_64") || (osBean.getName().contains("Mac"))){
+		if (arch.contains("x86_64") || (osBean.getName().contains("Mac") && arch.contains("aarch64"))){
 			archid = SITL;
 			wifi = new WifiQuality(null);
 			cpu_temp = new com.comino.mavutils.hw.upboard.CPUTemperature();
