@@ -31,11 +31,11 @@ public class WifiQuality {
 		
 		try {
 			String line = null;
-			Process process = Runtime.getRuntime().exec("iw dev "+device+" station dump");
+			Process process = Runtime.getRuntime().exec("iw dev "+device+" link");
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 			while((line=reader.readLine())!=null) {
 				if(line.contains("signal:")) {
-					quality = Math.min(Math.max(2 * (Integer.parseInt(line.substring(9, 14).trim()) + 80), 0), 100);
+					quality = Math.min(Math.max(2 * (Integer.parseInt(line.substring(9, 13).trim()) + 100), 0), 100);
 					//System.out.println(Integer.parseInt(line.substring(9, 14).trim())+":"+quality);
 				}
 			}
