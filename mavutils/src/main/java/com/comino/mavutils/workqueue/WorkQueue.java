@@ -12,6 +12,8 @@ import java.util.concurrent.locks.LockSupport;
 
 import com.comino.mavutils.legacy.ExecutorService.DaemonThreadFactory;
 
+import us.ihmc.log.LogTools;
+
 public class WorkQueue { 
 
 	private static WorkQueue instance;
@@ -86,7 +88,7 @@ public class WorkQueue {
 	public void printStatus() {
 		queues.forEach((i,w) -> {
 			if(!w.queue.isEmpty()) {
-				System.out.println("Queue "+i+" (Overruns: "+w.getExceeded()+", Cycle: "+w.min_cycle_ns/ns_ms+"ms):");
+				LogTools.info("Queue "+i+" (Overruns: "+w.getExceeded()+", Cycle: "+w.min_cycle_ns/ns_ms+"ms):");
 				w.print(); 
 			}
 		});
@@ -163,7 +165,7 @@ public class WorkQueue {
 				return;
 
 			isRunning = true;
-			System.out.println("WorkQueue "+name+" started ("+min_cycle_ns/ns_ms+"ms)");
+			LogTools.info("WorkQueue "+name+" started ("+min_cycle_ns/ns_ms+"ms)");
 			pool.setCorePoolSize(1);
 			pool.submit(this);
 		}
@@ -180,7 +182,7 @@ public class WorkQueue {
 				total_exec += w.getExecTime_us();
 				System.out.println(" ->  "+w);
 			});
-			System.out.println(" ->  remaining  "+(min_cycle_ns/1000 - total_exec)+"us");
+			LogTools.info(" ->  remaining  "+(min_cycle_ns/1000 - total_exec)+"us");
 		}
 
 		@Override

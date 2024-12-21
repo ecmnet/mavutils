@@ -10,6 +10,8 @@ import com.comino.mavutils.hw.jetson.CPUTemperature;
 import com.comino.mavutils.hw.upboard.BatteryTemperature;
 import com.comino.mavutils.linux.LinuxUtils;
 
+import us.ihmc.log.LogTools;
+
 public class HardwareAbstraction implements Runnable {
 
 	public static final int UPBOARD = 0;
@@ -47,7 +49,7 @@ public class HardwareAbstraction implements Runnable {
 			wifi = new WifiQuality(null);
 			cpu_temp = new com.comino.mavutils.hw.upboard.CPUTemperature();
 			battery_temp = new com.comino.mavutils.hw.sitl.BatteryTemperature();
-			System.out.println("Intel/Arm SITL architecture found..");
+			LogTools.info("Intel/Arm SITL architecture found..");
 			wifi = new WifiQuality(null);
 		}
 
@@ -55,7 +57,7 @@ public class HardwareAbstraction implements Runnable {
 			archid = JETSON;
 			cpu_temp = new com.comino.mavutils.hw.jetson.CPUTemperature();
 			battery_temp = new com.comino.mavutils.hw.sitl.BatteryTemperature();
-			System.out.println("Jetson Nano architecture found..");
+			LogTools.info("Jetson Nano architecture found..");
 			wifi = new WifiQuality("wlan0");
 		
 		}
@@ -64,7 +66,7 @@ public class HardwareAbstraction implements Runnable {
 			//archid = UPBOARD;
 			cpu_temp = new com.comino.mavutils.hw.upboard.CPUTemperature();
 			//battery_temp = new com.comino.mavutils.hw.upboard.BatteryTemperature();
-			System.out.println("Intel UpBoard architecture found..");
+			LogTools.info("Intel UpBoard architecture found..");
 		//	wifi = new WifiQuality("wlx74da38805d92");
 			//	wifi = new WifiQuality();
 			

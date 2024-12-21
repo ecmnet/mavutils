@@ -40,6 +40,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import us.ihmc.log.LogTools;
+
 public class ExecutorService {
 
 	public static final int LOW  = 0;
@@ -61,7 +63,7 @@ public class ExecutorService {
 		high_pool.allowCoreThreadTimeOut(false);
 		high_pool.setRemoveOnCancelPolicy(true);
 		high_pool.prestartAllCoreThreads();
-		System.out.println("("+low_pool.getCorePoolSize()+","+high_pool.getCorePoolSize()+") threads started");
+		LogTools.info("("+low_pool.getCorePoolSize()+","+high_pool.getCorePoolSize()+") threads started");
 
 	}
 
